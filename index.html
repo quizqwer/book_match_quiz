@@ -349,7 +349,7 @@ p.lede{ font-size:16px; color:var(--ink-soft); line-height:1.7; margin:0 0 28px;
   <section class="stage" id="stage-signup" hidden>
     <div class="eyebrow">認識新朋友</div>
     <h1 style="font-size:26px;">填幾個資料，馬上看候選名單</h1>
-    <p class="lede" style="margin-bottom:22px;">類型、暱稱、自我介紹跟興趣會顯示給其他人看，Email 和 IG 只有在雙方都同意後才會交換，邀請送出前不會曝光。</p>
+    <p class="lede" style="margin-bottom:22px;">類型、年齡區間、暱稱、自我介紹跟興趣會顯示給其他人看，Email 和 IG 只有在雙方都同意後才會交換，邀請送出前不會曝光。</p>
     <div class="card">
       <div class="field">
         <label for="f-self-type">妳的類型</label>
@@ -358,6 +358,18 @@ p.lede{ font-size:16px; color:var(--ink-soft); line-height:1.7; margin:0 0 28px;
           <option value="P">P（婆）</option>
           <option value="H">H（不分）</option>
           <option value="T">T</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-age-range">年齡區間</label>
+        <select id="f-age-range" required>
+          <option value="" disabled selected>請選擇</option>
+          <option value="18-20">18–20</option>
+          <option value="21-24">21–24</option>
+          <option value="25-29">25–29</option>
+          <option value="30-34">30–34</option>
+          <option value="35-39">35–39</option>
+          <option value="40+">40 以上</option>
         </select>
       </div>
       <div class="field">
@@ -521,7 +533,7 @@ var state = {
   qIndex: 0,
   history: [],
   resultType: null,
-  me: { selfType:"", nickname:"", email:"", bio:"", interests:"", ig:"", archetypeName:"" }
+  me: { selfType:"", ageRange:"", nickname:"", email:"", bio:"", interests:"", ig:"", archetypeName:"" }
 };
 
 function $(id){ return document.getElementById(id); }
@@ -639,17 +651,19 @@ function populateTypeSelect(){
 
 function submitSignup(){
   var selfType = $("f-self-type").value;
+  var ageRange = $("f-age-range").value;
   var nickname = $("f-nickname").value.trim();
   var bio = $("f-bio").value.trim();
   var interests = $("f-interests").value.trim();
   var ig = $("f-ig").value.trim();
   var email = $("f-email").value.trim();
   var typeKey = $("f-book-type").value;
-  if (!selfType || !nickname || !bio || !interests || !ig || !email) return;
+  if (!selfType || !ageRange || !nickname || !bio || !interests || !ig || !email) return;
 
   var chosenType = ARCHETYPES.filter(function(a){ return a.key === typeKey; })[0] || state.resultType;
 
   state.me.selfType = selfType;
+  state.me.ageRange = ageRange;
   state.me.nickname = nickname;
   state.me.bio = bio;
   state.me.interests = interests;
@@ -663,7 +677,7 @@ function submitSignup(){
         method:"POST", mode:"no-cors",
         headers:{"Content-Type":"text/plain;charset=utf-8"},
         body: JSON.stringify({
-          selfType: selfType, nickname: nickname, email: email, bio: bio, interests: interests, ig: ig,
+          selfType: selfType, ageRange: ageRange, nickname: nickname, email: email, bio: bio, interests: interests, ig: ig,
           archetype: chosenType.name, vector: state.vec
         })
       }).catch(function(){});
@@ -715,6 +729,7 @@ function renderCandidates(list){
         "<div class='candidate-name-wrap'>" +
           "<div class='candidate-name'>" + escapeHtml(c.nickname) + "</div>" +
           "<div class='candidate-selftype'>" + escapeHtml(c.selfType || "") + "</div>" +
+          "<div class='candidate-selftype'>" + escapeHtml(c.ageRange || "") + "</div>" +
         "</div>" +
         "<div class='candidate-score'>" + c.score + "% 合拍</div>" +
       "</div>" +
