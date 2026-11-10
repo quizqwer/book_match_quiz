@@ -586,6 +586,7 @@ function finishQuiz(){
   state.vec = clampVec(state.vec);
   var type = nearestArchetype(state.vec);
   state.resultType = type;
+  trackEvent("finish", type.name);
   $("result-type").textContent = type.name;
   $("result-tagline").textContent = type.tagline;
   $("result-desc").textContent = type.desc;
@@ -753,12 +754,24 @@ function escapeHtml(s){
   return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
+function trackEvent(eventName, archetypeName){
+  if (!APPS_SCRIPT_URL) return;
+  try {
+    fetch(APPS_SCRIPT_URL, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify({ action:"track", event: eventName, archetype: archetypeName || "" })
+    }).catch(function(){});
+  } catch(e){}
+}
+
 $("start-btn").addEventListener("click", function(){
   state.qIndex = 0;
   state.vec = [5,5,5,5,5];
   state.history = [];
   show("stage-quiz");
   renderQuestion();
+  trackEvent("start");
 });
 $("quiz-back-btn").addEventListener("click", goBack);
 $("goto-signup-btn").addEventListener("click", function(){ populateTypeSelect(); show("stage-signup"); });
