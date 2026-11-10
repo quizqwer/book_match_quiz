@@ -186,6 +186,24 @@ p.lede{ font-size:16px; color:var(--ink-soft); line-height:1.7; margin:0 0 28px;
 .dim-track{ flex:1; height:8px; background:var(--surface-2); border-radius:999px; overflow:hidden; }
 .dim-fill{ height:100%; background:var(--accent-2); border-radius:999px; }
 
+.compat-row{ padding:14px 0; border-top:1px solid var(--line); }
+.compat-row:first-child{ border-top:none; padding-top:0; }
+.compat-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; }
+.compat-name{ font-family:var(--display); font-weight:700; font-size:17px; }
+.compat-score{ flex-shrink:0; font-size:13px; font-weight:700; color:var(--accent); background:var(--accent-soft); padding:4px 11px; border-radius:999px; }
+.compat-tagline{ font-size:14px; color:var(--ink-soft); }
+
+.howitworks{
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  padding:18px 20px; margin-bottom:22px; display:flex; flex-direction:column; gap:13px;
+}
+.how-step{ display:flex; gap:12px; align-items:flex-start; font-size:14px; line-height:1.65; color:var(--ink); }
+.how-num{
+  flex:none; width:22px; height:22px; border-radius:50%; margin-top:1px;
+  background:var(--accent-soft); color:var(--accent); font-weight:800; font-size:12px;
+  display:flex; align-items:center; justify-content:center;
+}
+
 .field{ margin-bottom:16px; }
 .field label{ display:block; font-size:13.5px; font-weight:700; color:var(--ink-soft); margin-bottom:8px; }
 .field input, .field textarea{
@@ -320,6 +338,11 @@ p.lede{ font-size:16px; color:var(--ink-soft); line-height:1.7; margin:0 0 28px;
       <p class="result-desc" id="result-desc" style="margin-bottom:20px;"></p>
       <div id="result-dims"></div>
     </div>
+    <div class="card" style="margin-bottom:22px;">
+      <div class="eyebrow" style="margin-bottom:14px;">跟這些書本人格最合拍</div>
+      <div id="compat-list"></div>
+    </div>
+    <p class="lede" style="margin:0 0 18px;">新增了一個交友環節，會根據測驗結果幫大家配對，歡迎大家踴躍填寫，祝福大家都能認識到很棒的人 📚</p>
     <button class="btn" id="goto-signup-btn">想認識口味合拍的新朋友</button>
   </section>
 
@@ -371,7 +394,12 @@ p.lede{ font-size:16px; color:var(--ink-soft); line-height:1.7; margin:0 0 28px;
   <section class="stage" id="stage-candidates" hidden>
     <div class="eyebrow">候選名單</div>
     <h1 style="font-size:26px;">跟妳口味合拍的讀書人</h1>
-    <p class="lede" id="candidates-sub" style="margin-bottom:22px;">依照書本人格相似度排序，送出邀請後，要等對方同意才會交換聯絡方式。</p>
+    <p class="lede" id="candidates-sub" style="margin-bottom:16px;">依照書本人格相似度排序。</p>
+    <div class="howitworks">
+      <div class="how-step"><span class="how-num">1</span>點「送出交友邀請」後，對方會收到一封 email，看到妳的書本人格和自我介紹</div>
+      <div class="how-step"><span class="how-num">2</span>她點進專屬連結，決定要不要交換聯絡方式</div>
+      <div class="how-step"><span class="how-num">3</span>雙方都同意，才會互寄 Email／IG；她婉拒的話，妳不會收到任何通知</div>
+    </div>
     <div id="candidates-list"></div>
   </section>
 
@@ -570,7 +598,30 @@ function finishQuiz(){
       "<div class='dim-track'><div class='dim-fill' style='width:" + (state.vec[i] * 10) + "%'></div></div>";
     dimsWrap.appendChild(row);
   });
+  var compatWrap = $("compat-list");
+  compatWrap.innerHTML = "";
+  compatibleArchetypes(type).forEach(function(c){
+    var row = document.createElement("div");
+    row.className = "compat-row";
+    row.innerHTML = "<div class='compat-top'><span class='compat-name'>" + c.type.name + "</span>" +
+      "<span class='compat-score'>" + c.score + "% 合拍</span></div>" +
+      "<div class='compat-tagline'>" + c.type.tagline + "</div>";
+    compatWrap.appendChild(row);
+  });
   show("stage-result");
+}
+
+function compatibleArchetypes(type){
+  var MAX_D = Math.sqrt(5 * 10 * 10);
+  var others = ARCHETYPES.filter(function(a){ return a.key !== type.key; }).map(function(a){
+    var d = 0;
+    for (var i=0;i<5;i++){ var diff = a.vec[i]-type.vec[i]; d += diff*diff; }
+    d = Math.sqrt(d);
+    var score = Math.max(0, Math.round(100 - (d/MAX_D)*100));
+    return { type:a, score:score };
+  });
+  others.sort(function(x,y){ return y.score - x.score; });
+  return others.slice(0,2);
 }
 
 function populateTypeSelect(){
